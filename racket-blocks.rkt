@@ -1,8 +1,7 @@
 #lang racket
 
-(require 2htdp/universe 2htdp/image)
+(require 2htdp/universe 2htdp/image lang/posn)
 (require picturing-programs)
-(require threading)
 
 (define tile-size 16)
 
@@ -19,10 +18,16 @@
   (define bright-shade (make-gray 255 140))
   (define dark-shade (make-gray 0 140))
   (define overlay-width (quotient tile-size 5))
-  (define (add-overlay col w h x y base)
-    (place-image/align (rectangle w h "solid" col) x y "left" "top" base))
-  (~> (make-gradient-rect color)
-      (add-overlay bright-shade overlay-width tile-size 0 0 _)
-      (add-overlay bright-shade (- tile-size (* 2 overlay-width)) overlay-width overlay-width 0 _)
-      (add-overlay dark-shade overlay-width (- tile-size (* 2 overlay-width)) (- tile-size overlay-width) overlay-width _)
-      (add-overlay dark-shade tile-size overlay-width 0 (- tile-size overlay-width) _)))
+  (underlay (make-gradient-rect color)
+      (polygon (list (make-posn tile-size 0)
+                     (make-posn tile-size tile-size)
+                     (make-posn 0 tile-size)
+                     (make-posn overlay-width (- tile-size overlay-width))
+                     (make-posn (- tile-size overlay-width) (- tile-size overlay-width))
+                     (make-posn (- tile-size overlay-width) overlay-width)) "solid" dark-shade)
+      (polygon (list (make-posn 0 0)
+                     (make-posn tile-size 0)
+                     (make-posn (- tile-size overlay-width) overlay-width)
+                     (make-posn overlay-width overlay-width)
+                     (make-posn overlay-width (- tile-size overlay-width))
+                     (make-posn 0 tile-size)) "solid" bright-shade)))
