@@ -1,4 +1,4 @@
 #lang setup/infotab
 
 (define collection "racket-blocks")
-(define deps '("base"))
+(define deps '("base" "match-plus"))
