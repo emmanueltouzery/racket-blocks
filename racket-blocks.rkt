@@ -81,6 +81,6 @@
   (~>
    (gradient-rect board-width board-height board-bgcolor)
    (for-offsets board-width
-                #{add-line %1 %2 0 %2 board-height board-grid-color})
+                (λ(board x) (add-line board x 0 x board-height board-grid-color)))
    (for-offsets board-height
-                #{add-line %1 0 %2 board-width %2 board-grid-color})))
+                (λ(board y) (add-line board 0 y board-width y board-grid-color)))))
