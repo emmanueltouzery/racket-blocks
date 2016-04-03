@@ -1,8 +1,7 @@
 #lang curly-fn racket
 
-(require 2htdp/universe 2htdp/image lang/posn)
-(require picturing-programs)
-(require match-plus curly-fn)
+(require 2htdp/universe 2htdp/image lang/posn picturing-programs)
+(require match-plus curly-fn threading)
 
 (define tile-size 24)
 (define tile-padding 1)
@@ -70,7 +69,14 @@
 (define (draw-board)
   (define board-width (* tile-size board-width-tiles))
   (define board-height (* tile-size board-height-tiles))
-  (define board-bg (rectangle board-width board-height "solid" board-bgcolor))
-  (for/fold ([bg board-bg]) ([pos-x (stream-map #{* % tile-size} (in-naturals))]
-        #:break (> pos-x board-width))
-    (add-line bg pos-x 0 pos-x board-height board-grid-color)))
+  (define offsets (stream-map #{* % tile-size} (in-naturals)))
+  (define (for-offsets board max-val action)
+    (for/fold ([bg board]) ([val offsets]
+        #:break (> val max-val))
+    (action bg val)))
+  (~>
+   (rectangle board-width board-height "solid" board-bgcolor)
+   (for-offsets board-width
+                #{add-line %1 %2 0 %2 board-height board-grid-color})
+   (for-offsets board-height
+                #{add-line %1 0 %2 board-width %2 board-grid-color})))
