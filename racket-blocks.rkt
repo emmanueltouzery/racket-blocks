@@ -52,13 +52,13 @@
   (+ (* tile-count tile-size) (* (max 0 (sub1 tile-count)) tile-padding)))
 
 (define/match* (draw-piece (piece col pos))
-  (define tiles-width (apply max (map first pos)))
-  (define tiles-height (apply max (map second pos)))
+  (define tiles-width (add1 (apply max (map first pos))))
+  (define tiles-height (add1 (apply max (map second pos))))
   (define canvas (rectangle (offset-px tiles-width)
                             (offset-px tiles-height)
                             "solid" "transparent"))
   (define tile (block-tile col))
-  (foldl (λ(cur-pos c) (place-image
+  (foldl (λ(cur-pos c) (place-image/align
              tile
              (offset-px (first cur-pos))
-             (offset-px (second cur-pos)) c)) canvas pos))
+             (offset-px (second cur-pos)) "left" "top" c)) canvas pos))
