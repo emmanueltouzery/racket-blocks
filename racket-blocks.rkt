@@ -12,9 +12,11 @@
 
 (define (make-gray x [a 255]) (make-color x x x a))
 
-(define (gradient-rect color)
-  (define (apply-factor x) (* x (quotient 255 tile-size)))
-  (define base-rect (rectangle tile-size tile-size "solid" color))
+;; TODO memoize or pre-calculate.
+;; currently runnining needlessly for each row!
+(define (gradient-rect w h color)
+  (define (apply-factor x) (* x (quotient 255 w)))
+  (define base-rect (rectangle w h "solid" color))
   (overlay
    (map-image (λ(x y col) (make-gray (apply-factor x) 127)) base-rect)
    base-rect))
@@ -23,7 +25,7 @@
   (define bright-shade (make-gray 255 140))
   (define dark-shade (make-gray 0 140))
   (define overlay-width (quotient tile-size 7))
-  (underlay (gradient-rect color)
+  (underlay (gradient-rect tile-size tile-size color)
       (polygon (list (make-posn tile-size 0)
                      (make-posn tile-size tile-size)
                      (make-posn 0 tile-size)
@@ -75,7 +77,7 @@
         #:break (> val max-val))
     (action bg val)))
   (~>
-   (rectangle board-width board-height "solid" board-bgcolor)
+   (gradient-rect board-width board-height board-bgcolor)
    (for-offsets board-width
                 #{add-line %1 %2 0 %2 board-height board-grid-color})
    (for-offsets board-height
