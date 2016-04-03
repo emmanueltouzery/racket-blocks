@@ -1,11 +1,15 @@
-#lang racket
+#lang curly-fn racket
 
 (require 2htdp/universe 2htdp/image lang/posn)
 (require picturing-programs)
-(require match-plus)
+(require match-plus curly-fn)
 
 (define tile-size 24)
 (define tile-padding 1)
+(define board-width-tiles 10)
+(define board-height-tiles 25)
+(define board-bgcolor "dark gray")
+(define board-grid-color "light gray")
 
 (define (make-gray x [a 255]) (make-color x x x a))
 
@@ -62,3 +66,11 @@
              tile
              (offset-px (first cur-pos))
              (offset-px (second cur-pos)) "left" "top" c)) canvas pos))
+
+(define (draw-board)
+  (define board-width (* tile-size board-width-tiles))
+  (define board-height (* tile-size board-height-tiles))
+  (define board-bg (rectangle board-width board-height "solid" board-bgcolor))
+  (for/fold ([bg board-bg]) ([pos-x (stream-map #{* % tile-size} (in-naturals))]
+        #:break (> pos-x board-width))
+    (add-line bg pos-x 0 pos-x board-height board-grid-color)))

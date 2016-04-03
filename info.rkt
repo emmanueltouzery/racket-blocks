@@ -1,4 +1,4 @@
 #lang setup/infotab
 
 (define collection "racket-blocks")
-(define deps '("base" "match-plus"))
+(define deps '("base" "match-plus" "curly-fn"))
