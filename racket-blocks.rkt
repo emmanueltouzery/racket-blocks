@@ -12,13 +12,15 @@
 
 (define (make-gray x [a 255]) (make-color x x x a))
 
-;; TODO memoize or pre-calculate.
-;; currently runnining needlessly for each row!
 (define (gradient-rect w h color)
   (define (apply-factor x) (* x (quotient 255 w)))
   (define base-rect (rectangle w h "solid" color))
+  ;; measurably helps with perf to pre-calculate those
+  (define col-vec (vector->immutable-vector (list->vector (foldl
+                    (λ(x l) (cons (make-gray (apply-factor x) 127) l))
+                    '() (range w)))))
   (overlay
-   (map-image (λ(x y col) (make-gray (apply-factor x) 127)) base-rect)
+   (map-image (λ(x y col) (vector-ref col-vec x)) base-rect)
    base-rect))
 
 (define (block-tile color)
