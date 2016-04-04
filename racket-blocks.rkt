@@ -84,3 +84,20 @@
                 (λ(board x) (add-line board x 0 x board-height board-grid-color)))
    (for-offsets board-height
                 (λ(board y) (add-line board 0 y board-width y board-grid-color)))))
+
+(define (paint-row board row row-idx)
+  (define y (- (image-height board) (* tile-size row-idx)))
+  (for/fold ([cur-board board]) ([cell-value row] [col-idx (in-naturals)])
+    (cond
+      [(image-color? cell-value)
+       (define x (* tile-size col-idx))
+       (place-image/align (block-tile cell-value) x y "left" "top" cur-board)]
+      [else cur-board])))
+
+(define (paint-board board-st)
+  (for/fold ([board (draw-board)]) ([row board-st] [row-idx (in-naturals)])
+    (paint-row board row (- (length board-st) row-idx))))
+
+(paint-board (list
+              (list "red" "green" #f "blue")
+              (list "yellow" #f #f "red" #f)))
