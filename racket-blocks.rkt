@@ -73,7 +73,7 @@
 (define (draw-board)
   (define board-width (* tile-size board-width-tiles))
   (define board-height (* tile-size board-height-tiles))
-  (define offsets (stream-map #{* % tile-size} (in-naturals)))
+  (define offsets (stream-map #{* tile-size} (in-naturals)))
   (define (for-offsets board max-val action)
     (for/fold ([bg board]) ([val offsets]
         #:break (> val max-val))
