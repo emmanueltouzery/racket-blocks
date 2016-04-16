@@ -42,7 +42,13 @@
     [(key=? k "left") (piece-move-x -1 game-state)]
     [(key=? k "right") (piece-move-x 1 game-state)]))
 
-(big-bang (game-state (cur-piece-state (first pieces) (draw-piece (first pieces)) 0 0) empty (draw-board))
-          (to-draw draw-game)
-          (on-tick lower-piece)
-          (on-key handle-key))
+(define start-game-state
+  (game-state
+   (cur-piece-state (first pieces) (draw-piece (first pieces)) 0 0)
+   empty (draw-board)))
+
+(big-bang
+ start-game-state
+ (to-draw draw-game)
+ (on-tick lower-piece)
+ (on-key handle-key))
