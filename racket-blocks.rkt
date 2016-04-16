@@ -2,6 +2,7 @@
 
 (require 2htdp/universe 2htdp/image lang/posn picturing-programs)
 (require match-plus curly-fn threading)
+(require (for-syntax syntax/parse))
 
 (define tile-size 24)
 (define tile-padding 1)
@@ -23,24 +24,39 @@
    (map-image (λ(x y col) (vector-ref col-vec x)) base-rect)
    base-rect))
 
+;; I need a macro for this because I want to get rid of the
+;; make-posn calls everywhere. I can make a function using map
+;; and "apply make-posn" but then instead of "make-posn" I have
+;; to write "list" in my expressions so I don't gain much...
+(define-syntax (make-posns stx)
+  (define-syntax-class posn-pair
+    #:description "posn pair"
+    (pattern (x:expr y:expr)))
+  (syntax-parse stx
+    [(_ (p:posn-pair ...+))
+     #'(list (make-posn p.x p.y) ...)]))
+
 (define (block-tile color)
   (define bright-shade (make-gray 255 140))
   (define dark-shade (make-gray 0 140))
   (define overlay-width (quotient tile-size 7))
   (underlay (gradient-rect tile-size tile-size color)
-      (polygon (list (make-posn tile-size 0)
-                     (make-posn tile-size tile-size)
-                     (make-posn 0 tile-size)
-                     (make-posn overlay-width (- tile-size overlay-width))
-                     (make-posn (- tile-size overlay-width) (- tile-size overlay-width))
-                     (make-posn (- tile-size overlay-width) overlay-width)) "solid" dark-shade)
-      (polygon (list (make-posn 0 0)
-                     (make-posn tile-size 0)
-                     (make-posn (- tile-size overlay-width) overlay-width)
-                     (make-posn overlay-width overlay-width)
-                     (make-posn overlay-width (- tile-size overlay-width))
-                     (make-posn 0 tile-size)) "solid" bright-shade)))
-
+      (polygon (make-posns
+                ((tile-size 0)
+                 (tile-size tile-size)
+                 (0 tile-size)
+                 (overlay-width (- tile-size overlay-width))
+                 ((- tile-size overlay-width) (- tile-size overlay-width))
+                 ((- tile-size overlay-width) overlay-width)))
+               "solid" dark-shade)
+      (polygon (make-posns
+                ((0 0)
+                 (tile-size 0)
+                 ((- tile-size overlay-width) overlay-width)
+                 (overlay-width overlay-width)
+                 (overlay-width (- tile-size overlay-width))
+                 (0 tile-size)))
+               "solid" bright-shade)))
 
 (struct piece (color positions))
 
