@@ -1,10 +1,15 @@
 #lang curly-fn racket
 
 (provide
+ tile-size
+ ;; board
  paint-board
  draw-board
+ board-width-tiles
+ ;; pieces
  pieces
- draw-piece)
+ draw-piece
+ piece-width-tiles)
 
 (require 2htdp/image lang/posn picturing-programs)
 (require match-plus curly-fn threading)
@@ -89,6 +94,9 @@
 ;; in pixels. Depends on the tile size and the padding between tiles.
 (define (offset-px tile-count)
   (+ (* tile-count tile-size) (* (max 0 (sub1 tile-count)) tile-padding)))
+
+(define/match* (piece-width-tiles (piece _ pos))
+  (apply max (map first pos)))
 
 (define/match* (draw-piece (piece col pos))
   (define tiles-width (add1 (apply max (map first pos))))
