@@ -13,6 +13,7 @@
 
 (define (make-gray x [a 255]) (make-color x x x a))
 
+;; draw a rectangle with a gradient
 (define (gradient-rect w h color)
   (define (apply-factor x) (* x (quotient 255 w)))
   (define base-rect (rectangle w h "solid" color))
@@ -36,27 +37,34 @@
     [(_ (p:posn-pair ...+))
      #'(list (make-posn p.x p.y) ...)]))
 
+;; draw a single tile of a piece.
 (define (block-tile color)
   (define bright-shade (make-gray 255 140))
   (define dark-shade (make-gray 0 140))
   (define overlay-width (quotient tile-size 7))
-  (underlay (gradient-rect tile-size tile-size color)
-      (polygon (make-posns
-                ((tile-size 0)
-                 (tile-size tile-size)
-                 (0 tile-size)
-                 (overlay-width (- tile-size overlay-width))
-                 ((- tile-size overlay-width) (- tile-size overlay-width))
-                 ((- tile-size overlay-width) overlay-width)))
-               "solid" dark-shade)
-      (polygon (make-posns
-                ((0 0)
-                 (tile-size 0)
-                 ((- tile-size overlay-width) overlay-width)
-                 (overlay-width overlay-width)
-                 (overlay-width (- tile-size overlay-width))
-                 (0 tile-size)))
-               "solid" bright-shade)))
+  (underlay
+   ;; the background
+   (gradient-rect tile-size tile-size color)
+   ;; the brighter top-left shade
+   (polygon
+    (make-posns
+     ((tile-size 0)
+      (tile-size tile-size)
+      (0 tile-size)
+      (overlay-width (- tile-size overlay-width))
+      ((- tile-size overlay-width) (- tile-size overlay-width))
+      ((- tile-size overlay-width) overlay-width)))
+    "solid" dark-shade)
+   ;; the darker bottom-right shade
+   (polygon
+    (make-posns
+     ((0 0)
+      (tile-size 0)
+      ((- tile-size overlay-width) overlay-width)
+      (overlay-width overlay-width)
+      (overlay-width (- tile-size overlay-width))
+      (0 tile-size)))
+    "solid" bright-shade)))
 
 (struct piece (color positions))
 
@@ -71,6 +79,8 @@
         (piece "orange" '((0 0) (1 0) (2 0)
                           (0 1)))))
 
+;; calculates the offset of a tile for a position,
+;; in pixels. Depends on the tile size and the padding between tiles.
 (define (offset-px tile-count)
   (+ (* tile-count tile-size) (* (max 0 (sub1 tile-count)) tile-padding)))
 
@@ -86,6 +96,7 @@
              (offset-px (first cur-pos))
              (offset-px (second cur-pos)) "left" "top" c)) canvas pos))
 
+;; draw the board (without any pieces or tiles)
 (define (draw-board)
   (define board-width (* tile-size board-width-tiles))
   (define board-height (* tile-size board-height-tiles))
@@ -101,6 +112,7 @@
    (for-offsets board-height
                 (λ(board y) (add-line board 0 y board-width y board-grid-color)))))
 
+;; paint the tiles listed in 'row' at y offset based on 'row-idx'
 (define (paint-row board row row-idx)
   (define y (- (image-height board) (* tile-size row-idx)))
   (for/fold ([cur-board board]) ([cell-value row] [col-idx (in-naturals)])
@@ -110,6 +122,7 @@
        (place-image/align (block-tile cell-value) x y "left" "top" cur-board)]
       [else cur-board])))
 
+;; paint a board with all the tiles as described by 'board-st'
 (define (paint-board board-st)
   (for/fold ([board (draw-board)]) ([row board-st] [row-idx (in-naturals)])
     (paint-row board row (- (length board-st) row-idx))))
