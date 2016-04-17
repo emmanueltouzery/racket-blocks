@@ -13,15 +13,11 @@
 (define/match* (draw-game (game-state cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
     (~> cur-piece-state cur-piece-state-piece piece-width-tiles))
-  (define x-offset-tiles
-    (+
-     (cur-piece-state-x-tiles cur-piece-state)
-     (quotient (- board-width-tiles cur-piece-width-tiles) 2)))
   (~>
    (paint-board board-rows)
    (place-image/align
     (cur-piece-state-pic cur-piece-state)
-    (* x-offset-tiles tile-size)
+    (* (cur-piece-state-x-tiles cur-piece-state) tile-size)
     (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)))
 
 (define (game-state-update-piece game-state piece-updater)
@@ -33,18 +29,39 @@
   (game-state-update-piece
    game-state #{cur-piece-state-y-pixels-update % add1}))
 
+(define (modify-in-range value offset min max)
+  (let ([new-value (+ offset value)])
+    (cond
+      [(<= new-value min) min]
+      [(>= new-value max) max]
+      [else new-value])))
+
 (define (piece-move-x offset game-state)
+  (define cur-piece-width
+    (~> game-state
+        game-state-cur-piece-state
+        cur-piece-state-piece
+        piece-width-tiles))
+  (define max-offset (- board-width-tiles cur-piece-width 1))
   (game-state-update-piece
-   game-state #{cur-piece-state-x-tiles-update % #{+ offset}}))
+   game-state #{cur-piece-state-x-tiles-update
+                % #{modify-in-range % offset 0 max-offset}}))
 
 (define (handle-key game-state k)
   (cond
     [(key=? k "left") (piece-move-x -1 game-state)]
     [(key=? k "right") (piece-move-x 1 game-state)]))
 
+(define (center-x-offset-tiles piece)
+   (quotient
+    (- board-width-tiles (piece-width-tiles piece))
+    2))
 (define start-game-state
   (game-state
-   (cur-piece-state (first pieces) (freeze (draw-piece (first pieces))) 0 0)
+   (cur-piece-state
+    (first pieces)
+    (freeze (draw-piece (first pieces)))
+    (center-x-offset-tiles (first pieces)) 0)
    empty (freeze (draw-board))))
 
 (big-bang
