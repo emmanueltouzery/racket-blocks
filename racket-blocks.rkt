@@ -44,8 +44,8 @@
 
 (define start-game-state
   (game-state
-   (cur-piece-state (first pieces) (draw-piece (first pieces)) 0 0)
-   empty (draw-board)))
+   (cur-piece-state (first pieces) (freeze (draw-piece (first pieces))) 0 0)
+   empty (freeze (draw-board))))
 
 (big-bang
  start-game-state
