@@ -49,8 +49,7 @@
               (λ(x y) (list x (- board-height-tiles (+ y piece-top-tiles 1))))))
   (or
    (ormap #{< (second %) 0} coordinates-under-piece)
-   ;; TODO must be a better way than (first %) (second %)
-   (ormap #{board-get-item board-rows (first %) (second %)} coordinates-under-piece)))
+   (ormap #{apply board-get-item board-rows %} coordinates-under-piece)))
 
 ;; TODO indexing in a list of list is a sure
 ;; sign I'm using the wrong data structure.
