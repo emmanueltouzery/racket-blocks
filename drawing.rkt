@@ -6,7 +6,9 @@
  paint-board
  draw-board
  board-width-tiles
+ board-height-tiles
  ;; pieces
+ piece
  pieces
  draw-piece
  piece-width-tiles)
@@ -96,7 +98,7 @@
   (+ (* tile-count tile-size) (* (max 0 (sub1 tile-count)) tile-padding)))
 
 (define/match* (piece-width-tiles (piece _ pos))
-  (apply max (map first pos)))
+  (add1 (apply max (map first pos))))
 
 (define/match* (draw-piece (piece col pos))
   (define tiles-width (add1 (apply max (map first pos))))
