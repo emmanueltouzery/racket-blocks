@@ -50,12 +50,12 @@
               (λ(x y) (list x (- board-height-tiles (+ y piece-top-tiles 1))))))
   (or
    (ormap #{< (second %) 0} coordinates-under-piece)
-   (ormap #{apply board-has-item board-rows %} coordinates-under-piece)))
+   (ormap #{apply board-get-item board-rows %} coordinates-under-piece)))
 
 ;; TODO indexing in a list of list is a sure
 ;; sign I'm using the wrong data structure.
 ;; move to http://srfi.schemers.org/srfi-25/srfi-25.html ?
-(define (board-has-item board-rows x y)
+(define (board-get-item board-rows x y)
   (define rows (length board-rows))
   (and (<= (add1 y) rows)
        (let ([row (list-ref board-rows (- rows y 1))])
