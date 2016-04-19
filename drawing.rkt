@@ -9,6 +9,7 @@
  board-height-tiles
  ;; pieces
  piece
+ piece-color
  pieces
  draw-piece
  piece-width-tiles)

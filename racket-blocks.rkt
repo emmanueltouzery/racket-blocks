@@ -8,22 +8,13 @@
     [(key=? k "left") (piece-move-x -1 game-state)]
     [(key=? k "right") (piece-move-x 1 game-state)]))
 
-(define (center-x-offset-tiles piece)
-   (quotient
-    (- board-width-tiles (piece-width-tiles piece))
-    2))
 (define start-game-state
   (game-state
-   (cur-piece-state
-    (first pieces)
-    (freeze (draw-piece (first pieces)))
-    (center-x-offset-tiles (first pieces)) 0)
-   (list
-    (list "red" "green" #f "blue")
-    (list "yellow" #f #f "red" #f)) (freeze (draw-board))))
+   get-new-piece
+   '() (freeze (draw-board))))
 
 (big-bang
  start-game-state
  (to-draw draw-game)
- (on-tick lower-piece)
+ (on-tick lower-piece 0.015)
  (on-key handle-key))
