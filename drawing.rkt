@@ -101,17 +101,23 @@
 (define/match* (piece-width-tiles (piece _ pos))
   (add1 (apply max (map first pos))))
 
-(define/match* (draw-piece (piece col pos))
-  (define tiles-width (add1 (apply max (map first pos))))
-  (define tiles-height (add1 (apply max (map second pos))))
-  (define canvas (rectangle (offset-px tiles-width)
-                            (offset-px tiles-height)
-                            "solid" "transparent"))
-  (define tile (block-tile col))
-  (foldl (λ(cur-pos c) (place-image/align
-             tile
-             (offset-px (first cur-pos))
-             (offset-px (second cur-pos)) "left" "top" c)) canvas pos))
+(define/match* (piece-height-tiles (piece _ pos))
+  (add1 (apply max (map second pos))))
+
+(define (draw-piece piece)
+  (define canvas
+    (rectangle
+     (offset-px (piece-width-tiles piece))
+     (offset-px (piece-height-tiles piece))
+     "solid" "transparent"))
+  (define tile (block-tile (piece-color piece)))
+  (foldl (λ(cur-pos c)
+           (place-image/align
+            tile
+            (offset-px (first cur-pos))
+            (offset-px (second cur-pos))
+            "left" "top" c))
+         canvas (piece-positions piece)))
 
 ;; draw the board (without any pieces or tiles)
 (define (draw-board)
@@ -143,7 +149,3 @@
 (define (paint-board board-st)
   (for/fold ([board (draw-board)]) ([row board-st] [row-idx (in-naturals)])
     (paint-row board row (- (length board-st) row-idx))))
-
-;;(paint-board (list
-;;              (list "red" "green" #f "blue")
-;;              (list "yellow" #f #f "red" #f)))
