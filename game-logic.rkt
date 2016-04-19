@@ -94,7 +94,6 @@
            #{cons x+} (list x+)))])))
 
 (define (board-update-row row color piece-x-list)
-  (print piece-x-list)
   (for/list ([(cell idx) (in-indexed row)])
     (if (ormap #{= idx} piece-x-list)
         color cell)))
