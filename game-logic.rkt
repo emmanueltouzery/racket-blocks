@@ -133,7 +133,7 @@
        r)))
   ;; TODO wipe out rows that are now complete
   (game-state get-new-piece new-board-rows
-              (paint-board new-board-rows)))
+              (freeze (paint-board new-board-rows))))
 
 (define (modify-in-range value offset min max)
   (let ([new-value (+ offset value)])
