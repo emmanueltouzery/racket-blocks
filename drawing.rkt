@@ -19,7 +19,6 @@
 (require (for-syntax syntax/parse))
 
 (define tile-size 24)
-(define tile-padding 1)
 (define board-width-tiles 10)
 (define board-height-tiles 25)
 (define board-bgcolor "dark gray")
@@ -93,10 +92,8 @@
         (piece "orange" '((0 0) (1 0) (2 0)
                           (0 1)))))
 
-;; calculates the offset of a tile for a position,
-;; in pixels. Depends on the tile size and the padding between tiles.
 (define (offset-px tile-count)
-  (+ (* tile-count tile-size) (* (max 0 (sub1 tile-count)) tile-padding)))
+  (* tile-count tile-size))
 
 (define/match* (piece-width-tiles (piece _ pos))
   (add1 (apply max (map first pos))))
