@@ -82,7 +82,9 @@
 
 ;; returns a hash with absolute grid positions
 ;; for the piece. key = y, value = list of x for that y.
-(define/match* (get-piece-yx-positions (piece _ pos) left top)
+(define/match* (get-piece-yx-positions
+                (cur-piece-state (piece _ pos) _ left y-pixels))
+  (define top (quotient y-pixels tile-size))
   (for/fold ([result (make-immutable-hash)])
             ([item pos])
     (match item
@@ -106,12 +108,12 @@
 
 (define/match* (reached-bottom
                 (game-state
-                 (cur-piece-state piece _ x-tiles pc-y-pixels)
+                 piece-state
                  board-rows _))
-  (define colr (piece-color piece))
-  (define piece-top-tiles (quotient pc-y-pixels tile-size))
+  (define colr (piece-color
+                (cur-piece-state-piece piece-state)))
   (define piece-yx-pos
-    (get-piece-yx-positions piece x-tiles piece-top-tiles))
+    (get-piece-yx-positions piece-state))
   ;; update the existing rows
   (define updated-board-rows
     (reverse
