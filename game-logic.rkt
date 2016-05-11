@@ -141,7 +141,7 @@
         (hash-ref piece-yx-pos idx) colr)
        r)))
   ;; TODO wipe out rows that are now complete
-  (game-state get-new-piece new-board-rows
+  (game-state #f get-new-piece new-board-rows
               (freeze (paint-board new-board-rows))))
 
 (define (modify-in-range value offset min max)
