@@ -100,7 +100,7 @@
           (hash-update
            result
            (- board-height-tiles (+ y top) 1)
-           #{cons x+} (list x+)))])))
+           #{cons x+} '()))])))
 
 (define (board-update-row row color piece-x-list)
   (for/list ([(cell idx) (in-indexed row)])
