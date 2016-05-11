@@ -7,20 +7,22 @@
 
 (provide
  game-state
+ game-state-is-paused?-update
  get-new-piece
  cur-piece-state
+ unless-paused
  piece-move-x
  lower-piece
  draw-game)
 
-(struct cur-piece-state (piece pic x-tiles y-pixels))
+(struct cur-piece-state (piece pic x-tiles y-pixels) #:transparent)
 (define-struct-updaters cur-piece-state)
-(struct game-state (cur-piece-state board-rows cur-board-pic))
+(struct game-state (is-paused? cur-piece-state board-rows cur-board-pic) #:transparent)
 (define-struct-updaters game-state)
 
 (define falling-speed 1)
 
-(define/match* (draw-game (game-state cur-piece-state board-rows cur-board-draw))
+(define/match* (draw-game (game-state _ cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
     (~> cur-piece-state cur-piece-state-piece piece-width-tiles))
   (~>
@@ -42,7 +44,7 @@
        [(list x y) (let ([y+ (add1 y)])
                      (hash-update result (+ x x-tiles) #{if (> y+ %) y+ %} y+))])))
 
-(define/match* (piece-touches-bottom (game-state piece-state board-rows _))
+(define/match* (piece-touches-bottom (game-state _ piece-state board-rows _))
   (define piece-top-tiles (quotient (cur-piece-state-y-pixels piece-state) tile-size))
   (define cur-piece-depths (piece-depths piece-state))
   (define coordinates-under-piece
@@ -62,12 +64,17 @@
         (and (<= (add1 x) (length row))
             (list-ref row x)))))
 
+(define (unless-paused game-action game-state)
+  (if (game-state-is-paused? game-state)
+      game-state
+      (game-action game-state)))
+
 (define (lower-piece game-state)
-  (define new-state (game-state-update-piece
-   game-state #{cur-piece-state-y-pixels-update % #{+ falling-speed}}))
-  (if (piece-touches-bottom game-state)
-      (reached-bottom game-state)
-      new-state))
+      (define new-state (game-state-update-piece
+                         game-state #{cur-piece-state-y-pixels-update % #{+ falling-speed}}))
+      (if (piece-touches-bottom game-state)
+          (reached-bottom game-state)
+          new-state))
 
 (define (center-x-offset-tiles piece)
    (quotient
@@ -107,7 +114,7 @@
     (if (ormap #{= idx} indexes) val #f)))
 
 (define/match* (reached-bottom
-                (game-state
+                (game-state _
                  piece-state
                  board-rows _))
   (define colr (piece-color

@@ -79,7 +79,7 @@
       (0 tile-size)))
     "solid" bright-shade)))
 
-(struct piece (color positions))
+(struct piece (color positions) #:transparent)
 
 (define pieces
   (list (piece "red"    '((0 0) (1 0) (2 0)
