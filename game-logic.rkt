@@ -21,6 +21,7 @@
 (define-struct-updaters game-state)
 
 (define falling-speed 1)
+(define move-x-tolerance 5)
 
 (define/match* (draw-game (game-state _ cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
@@ -151,8 +152,37 @@
       [(>= new-value max) max]
       [else new-value])))
 
-;; TODO prevent moving left or right if there is a piece there.
-(define (piece-move-x offset game-state)
+(define/match* (exactly-on-y? (cur-piece-state piece pic x-tiles y-pixels))
+  (define diff (modulo y-pixels tile-size))
+  (cond
+    [(< diff move-x-tolerance) 'cur]
+    [(> diff (- tile-size move-x-tolerance)) 'next]
+    [else #f]))
+
+(define (piece-move-x offset g-state)
+  (printf "piece-move-x!!~n")
+  (match-let
+      ([(game-state _ piece-state board-rows _) g-state])
+    (define piece-yx
+      (hash->list (get-piece-yx-positions piece-state)))
+    (define occupied-cur
+      (occupied-pieces? board-rows offset 0 piece-yx))
+    (printf "exactly on? ~a  -- occupied-cur ~a  ~n" (exactly-on-y? piece-state) occupied-cur)
+    (define occupied
+      (case (exactly-on-y? piece-state)
+          ['cur occupied-cur]
+          ['next (occupied-pieces? board-rows offset -1 piece-yx)]
+          [else (or occupied-cur
+              (occupied-pieces? board-rows offset -1 piece-yx))]))
+    (printf "occupied is ~a ~n" occupied)
+    (if occupied
+        g-state
+        (do-move-x offset g-state))))
+
+(define (occupied-pieces? board-rows offset-x offset-y piece-yx)
+  (ormap #{position-occupied? board-rows offset-x offset-y} piece-yx))
+
+(define (do-move-x offset game-state)
   (define cur-piece-width
     (~> game-state
         game-state-cur-piece-state
@@ -162,3 +192,7 @@
   (game-state-update-piece
    game-state #{cur-piece-state-x-tiles-update
                 % #{modify-in-range % offset 0 max-offset}}))
+
+(define/match* (position-occupied? board-rows offset-x offset-y (cons y xs))
+  (define cmp (if (> offset-x 0) max min))
+  (board-get-item board-rows (+ offset-x (apply cmp xs)) (+ offset-y y)))
