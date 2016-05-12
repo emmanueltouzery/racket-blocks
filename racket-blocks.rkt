@@ -9,7 +9,8 @@
     [(key=? k "left") (piece-move-x -1 game-state)]
     [(key=? k "right") (piece-move-x 1 game-state)]
     [(key=? k " ") (game-state-is-paused?-update
-                         game-state not)]))
+                         game-state not)]
+    [else game-state]))
 
 (define start-game-state
   (game-state
