@@ -115,25 +115,30 @@
     (if (ormap #{= idx} indexes) val #f)))
 
 (define/match* (reached-bottom
-                (game-state _
-                 piece-state
-                 board-rows _))
+                (game-state _ piece-state board-rows _))
   (define colr (piece-color
                 (cur-piece-state-piece piece-state)))
   (define piece-yx-pos
     (get-piece-yx-positions piece-state))
-  ;; update the existing rows
-  (define updated-board-rows
-    (reverse
+  (define new-board
+    (~>
+     board-rows
+     (board-update-rows colr piece-yx-pos)
+     (board-create-new-rows-if-needed colr piece-yx-pos)))
+  ;; TODO wipe out rows that are now complete
+  (game-state #f get-new-piece new-board (freeze (paint-board new-board))))
+
+(define (board-update-rows board-rows colr piece-yx-pos)
+  (reverse
      (for/list
          ([(row idx) (in-indexed (reverse board-rows))])
        (board-update-row
         row colr
         (hash-ref piece-yx-pos idx empty)))))
-  ;; create new rows if needed
-  (define new-board-rows
-    (for/fold
-     ([r updated-board-rows])
+
+(define (board-create-new-rows-if-needed board-rows colr piece-yx-pos)
+  (for/fold
+     ([r board-rows])
      ([idx (sort (hash-keys piece-yx-pos) <)]
       #:when (>= idx (length board-rows)))
       (cons
@@ -141,9 +146,6 @@
         board-width-tiles
         (hash-ref piece-yx-pos idx) colr)
        r)))
-  ;; TODO wipe out rows that are now complete
-  (game-state #f get-new-piece new-board-rows
-              (freeze (paint-board new-board-rows))))
 
 (define (modify-in-range value offset min max)
   (let ([new-value (+ offset value)])
