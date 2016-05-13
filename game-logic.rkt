@@ -155,8 +155,8 @@
 (define/match* (exactly-on-y? (cur-piece-state piece pic x-tiles y-pixels))
   (define diff (modulo y-pixels tile-size))
   (cond
-    [(< diff move-x-tolerance) 'cur]
-    [(> diff (- tile-size move-x-tolerance)) 'next]
+    [(<= diff move-x-tolerance) 'cur]
+    [(>= diff (- tile-size move-x-tolerance)) 'next]
     [else #f]))
 
 (define (piece-move-x offset g-state)

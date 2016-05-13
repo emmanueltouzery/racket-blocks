@@ -1,14 +1,16 @@
-#lang racket
+#lang curly-fn racket
 
 (require rackunit)
 
 (require "../../drawing.rkt")
+(require curly-fn)
 (require/expose "../../game-logic.rkt"
                 (piece-depths
                  cur-piece-state
                  board-get-item
                  game-state
-                 piece-move-x))
+                 piece-move-x
+                 move-x-tolerance))
 
 (check-equal?
  (piece-depths (cur-piece-state (first pieces) #f 0 #f))
@@ -37,23 +39,33 @@
 ;; for moving left/right
 (define (check-move-x msg in-game-state move expected-game-state)
   (check-equal?
-   expected-game-state
-   (piece-move-x move in-game-state) msg))
+   (piece-move-x move in-game-state)
+   expected-game-state msg))
 
 (define y-board-bottom
   (* (- tile-size 1) board-height-tiles))
 
-(check-move-x "move left empty board"
+(check-move-x "move left, empty board"
  (test-game-state 5 4 '())
  -1
  (test-game-state 4 4 '()))
 
-(check-move-x "move left already on the left edge"
+(check-move-x "move left, already on the left edge"
  (test-game-state 0 4 '())
  -1
  (test-game-state 0 4 '()))
 
-(check-move-x "move left cell occupied"
- (test-game-state 3 y-board-bottom '((#f #f "red" #f)))
- -1
- (test-game-state 3 y-board-bottom '((#f #f "red" #f))))
+(let ([game-state
+       (test-game-state 3 y-board-bottom '((#f #f "red" #f)))])
+  (check-move-x "move left, cell occupied"
+                game-state -1 game-state))
+
+(let ([game-state
+       (test-game-state 3 (- y-board-bottom move-x-tolerance) '((#f #f "red" #f)()))])
+  (check-move-x "move left, cell occupied, not within tolerance to pass under it"
+                game-state -1 game-state))
+
+(let ([state-from-x
+       #{test-game-state % (- y-board-bottom move-x-tolerance -1) '((#f #f "red" #f)())}])
+  (check-move-x "move left, cell occupied but within tolerance to pass under it"
+                (state-from-x 3) -1 (state-from-x 2)))
