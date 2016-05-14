@@ -25,7 +25,7 @@
 (define falling-speed 1)
 (define move-x-tolerance 5)
 
-(define/match* (draw-game (game-state _ cur-piece-state board-rows cur-board-draw))
+(define/match* (draw-game (game-state mode cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
     (~> cur-piece-state cur-piece-state-piece piece-width-tiles))
   (~>
@@ -33,7 +33,16 @@
    (place-image/align
     (cur-piece-state-pic cur-piece-state)
     (* (cur-piece-state-x-tiles cur-piece-state) tile-size)
-    (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)))
+    (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)
+   (draw-mode-specific mode)
+   ))
+
+(define (draw-mode-specific image mode)
+  (match mode
+    [(list 'wiping-rows rows step)
+     (for/fold ([board image]) ([row rows])
+       (paint-row (- step) board (second row) (add1 (first row))))]
+    [else image]))
 
 (define (game-state-update-piece game-state piece-updater)
   (game-state-cur-piece-state-set
@@ -122,10 +131,7 @@
      board-rows
      (board-update-rows colr piece-yx-pos)
      (board-create-new-rows-if-needed colr piece-yx-pos)))
-  (game-state
-   (rows-to-wipe-info new-board)
-   get-new-piece new-board
-   (freeze (paint-board new-board))))
+  (reached-bottom-get-new-game-state new-board))
 
 (define (board-update-rows board-rows colr piece-yx-pos)
   (reverse
@@ -137,23 +143,40 @@
 
 (define (board-create-new-rows-if-needed board-rows colr piece-yx-pos)
   (for/fold
-     ([r board-rows])
-     ([idx (sort (hash-keys piece-yx-pos) <)]
-      #:when (>= idx (length board-rows)))
-      (cons
-       (indexes-val-to-list
-        board-width-tiles
-        (hash-ref piece-yx-pos idx) colr)
-       r)))
+   ([r board-rows])
+   ([idx (sort (hash-keys piece-yx-pos) <)]
+    #:when (>= idx (length board-rows)))
+    (cons
+     (indexes-val-to-list
+      board-width-tiles
+      (hash-ref piece-yx-pos idx) colr)
+     r)))
 
-(define (rows-to-wipe-info board)
-  (define rows-to-wipe
-    (for/list ([i (in-naturals)]
-               [row (reverse board)]
-               #:when (andmap identity row)) i))
-  (if (null? rows-to-wipe)
-      'normal
-      (list 'wiping-rows rows-to-wipe 0)))
+(define (reached-bottom-get-new-game-state board)
+  (define-values (new-board wiped-rows)
+    (get-new-board-wiped-rows board))
+  (define game-mode
+    (if (null? wiped-rows)
+        ;; no wiped rows, continue normally
+        'normal
+        ;; wiped rows, animate their removal
+        (list 'wiping-rows wiped-rows 0)))
+  (game-state
+   game-mode
+   get-new-piece new-board
+   (freeze (paint-board new-board))))
+
+(define (get-new-board-wiped-rows board)
+  (for/fold
+      ([new-board '()]
+       [wiped-rows '()])
+      ([i (in-naturals)]
+       [row (reverse board)])
+    (if (andmap identity row)
+        ;; this row got wiped.
+        (values (cons '() new-board) (cons (list i row) wiped-rows))
+        ;; this row didn't get wiped.
+        (values (cons row new-board) wiped-rows))))
 
 (define (modify-in-range value offset min max)
   (let ([new-value (+ offset value)])
@@ -208,19 +231,28 @@
   (board-get-item board-rows (+ offset-x (apply cmp xs)) (+ offset-y y)))
 
 (define (game-state-update-picture game-state)
-   (game-state-cur-board-pic-set game-state
-    (freeze (paint-board (game-state-board-rows game-state)))))
-
-(define (wipe-rows-step game-state rows step)
-  ;; TODO implement animation
-  (~>
+  (game-state-cur-board-pic-set
    game-state
-   (game-state-board-rows-set
+   (freeze (paint-board (game-state-board-rows game-state)))))
+
+(define (wipe-rows-step game-state index+row-list step)
+  (if (< step (* board-width-tiles tile-size))
+      ;; increase the step
+      (game-state-mode-update game-state #{list-update % 2 #{+ 10}})
+      ;; we're done: complete the wipe.
+      (complete-the-wipe game-state index+row-list)))
+
+(define (complete-the-wipe game-state index+row-list)
+  (define row-indexes (map first index+row-list))
+  (~>
+   ;; remove the rows that were wiped
+   (game-state-board-rows-set game-state
     (reverse
      (for/list
          ([item (reverse (game-state-board-rows game-state))]
           [i (in-naturals)]
-          #:when (not (member i rows)))
+          #:when (not (member i row-indexes)))
        item)))
+   ;; recalculate the picture, reset to normal.
    (game-state-update-picture)
    (game-state-mode-set 'normal)))
