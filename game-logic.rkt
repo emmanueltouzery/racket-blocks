@@ -25,6 +25,7 @@
 (define falling-speed 1)
 (define move-x-tolerance 5)
 
+;; TODO animation when we're in pause.
 (define/match* (draw-game (game-state mode cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
     (~> cur-piece-state cur-piece-state-piece piece-width-tiles))
@@ -34,8 +35,7 @@
     (cur-piece-state-pic cur-piece-state)
     (* (cur-piece-state-x-tiles cur-piece-state) tile-size)
     (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)
-   (draw-mode-specific mode)
-   ))
+   (draw-mode-specific mode)))
 
 (define (draw-mode-specific image mode)
   (match mode
