@@ -8,10 +8,11 @@
   (cond
     [(key=? k "left") (piece-move-x -1 game-state)]
     [(key=? k "right") (piece-move-x 1 game-state)]
-    [(key=? k " ") (game-state-mode-update
-                         game-state #{case %
-                                       ['paused 'normal]
-                                       [else 'paused]})]
+    [(key=? k " ")
+     (game-state-mode-update
+      game-state #{case %
+                    ['paused 'normal]
+                    [else 'paused]})]
     [else game-state]))
 
 (define start-game-state

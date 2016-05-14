@@ -44,8 +44,8 @@
   (for/fold ([result (make-immutable-hash)])
             ([item pos])
     (match item
-       [(list x y) (let ([y+ (add1 y)])
-                     (hash-update result (+ x x-tiles) #{if (> y+ %) y+ %} y+))])))
+      [(list x y) (let ([y+ (add1 y)])
+                    (hash-update result (+ x x-tiles) #{if (> y+ %) y+ %} y+))])))
 
 (define/match* (piece-touches-bottom (game-state _ piece-state board-rows _))
   (define piece-top-tiles (quotient (cur-piece-state-y-pixels piece-state) tile-size))
@@ -64,26 +64,26 @@
   (define rows (length board-rows))
   (and (<= (add1 y) rows)
        (let ([row (list-ref board-rows (- rows y 1))])
-        (and (<= (add1 x) (length row))
-            (list-ref row x)))))
+         (and (<= (add1 x) (length row))
+              (list-ref row x)))))
 
 (define (lower-piece game-state)
-      (define new-state (game-state-update-piece
-                         game-state #{cur-piece-state-y-pixels-update % #{+ falling-speed}}))
-      (if (piece-touches-bottom game-state)
-          (reached-bottom game-state)
-          new-state))
+  (define new-state (game-state-update-piece
+                     game-state #{cur-piece-state-y-pixels-update % #{+ falling-speed}}))
+  (if (piece-touches-bottom game-state)
+      (reached-bottom game-state)
+      new-state))
 
 (define (center-x-offset-tiles piece)
-   (quotient
-    (- board-width-tiles (piece-width-tiles piece))
-    2))
+  (quotient
+   (- board-width-tiles (piece-width-tiles piece))
+   2))
 
 (define get-new-piece
   (cur-piece-state
-    (first pieces)
-    (freeze (draw-piece (first pieces)))
-    (center-x-offset-tiles (first pieces)) 0))
+   (first pieces)
+   (freeze (draw-piece (first pieces)))
+   (center-x-offset-tiles (first pieces)) 0))
 
 ;; returns a hash with absolute grid positions
 ;; for the piece. key = y, value = list of x for that y.
@@ -93,12 +93,12 @@
   (for/fold ([result (make-immutable-hash)])
             ([item pos])
     (match item
-       [(list x y)
-        (let ([x+ (+ x left)])
-          (hash-update
-           result
-           (- board-height-tiles (+ y top) 1)
-           #{cons x+} '()))])))
+      [(list x y)
+       (let ([x+ (+ x left)])
+         (hash-update
+          result
+          (- board-height-tiles (+ y top) 1)
+          #{cons x+} '()))])))
 
 (define (board-update-row row color piece-x-list)
   (for/list ([(cell idx) (in-indexed row)])
@@ -129,11 +129,11 @@
 
 (define (board-update-rows board-rows colr piece-yx-pos)
   (reverse
-     (for/list
-         ([(row idx) (in-indexed (reverse board-rows))])
-       (board-update-row
-        row colr
-        (hash-ref piece-yx-pos idx empty)))))
+   (for/list
+       ([(row idx) (in-indexed (reverse board-rows))])
+     (board-update-row
+      row colr
+      (hash-ref piece-yx-pos idx empty)))))
 
 (define (board-create-new-rows-if-needed board-rows colr piece-yx-pos)
   (for/fold
@@ -180,10 +180,10 @@
     (printf "exactly on? ~a  -- occupied-cur ~a  ~n" (exactly-on-y? piece-state) occupied-cur)
     (define occupied
       (case (exactly-on-y? piece-state)
-          ['cur occupied-cur]
-          ['next (occupied-pieces? board-rows offset -1 piece-yx)]
-          [else (or occupied-cur
-              (occupied-pieces? board-rows offset -1 piece-yx))]))
+        ['cur occupied-cur]
+        ['next (occupied-pieces? board-rows offset -1 piece-yx)]
+        [else (or occupied-cur
+                  (occupied-pieces? board-rows offset -1 piece-yx))]))
     (printf "occupied is ~a ~n" occupied)
     (if occupied
         g-state
