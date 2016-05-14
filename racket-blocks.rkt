@@ -8,18 +8,23 @@
   (cond
     [(key=? k "left") (piece-move-x -1 game-state)]
     [(key=? k "right") (piece-move-x 1 game-state)]
-    [(key=? k " ") (game-state-is-paused?-update
-                         game-state not)]
+    [(key=? k " ") (game-state-mode-update
+                         game-state #{case %
+                                       ['paused 'normal]
+                                       [else 'paused]})]
     [else game-state]))
 
 (define start-game-state
   (game-state
-   #f
+   'normal
    get-new-piece
    '() (freeze (draw-board))))
 
 (big-bang
  start-game-state
  (to-draw draw-game)
- (on-tick #{unless-paused lower-piece} 0.015)
+ (on-tick #{match (game-state-mode %)
+             ['paused %]
+             ['normal (lower-piece %)]
+             [(list 'wiping-rows rows step) (wipe-rows-step % rows step)]} 0.015)
  (on-key handle-key))

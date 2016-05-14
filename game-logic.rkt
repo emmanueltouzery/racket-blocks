@@ -7,17 +7,19 @@
 
 (provide
  game-state
- game-state-is-paused?-update
+ game-state-mode
+ game-state-mode-update
  get-new-piece
  cur-piece-state
- unless-paused
  piece-move-x
  lower-piece
- draw-game)
+ draw-game
+ wipe-rows-step)
 
 (struct cur-piece-state (piece pic x-tiles y-pixels) #:transparent)
 (define-struct-updaters cur-piece-state)
-(struct game-state (is-paused? cur-piece-state board-rows cur-board-pic) #:transparent)
+;; game-mode can be 'normal, 'paused, 'wiping-rows
+(struct game-state (mode cur-piece-state board-rows cur-board-pic) #:transparent)
 (define-struct-updaters game-state)
 
 (define falling-speed 1)
@@ -64,11 +66,6 @@
        (let ([row (list-ref board-rows (- rows y 1))])
         (and (<= (add1 x) (length row))
             (list-ref row x)))))
-
-(define (unless-paused game-action game-state)
-  (if (game-state-is-paused? game-state)
-      game-state
-      (game-action game-state)))
 
 (define (lower-piece game-state)
       (define new-state (game-state-update-piece
@@ -125,8 +122,10 @@
      board-rows
      (board-update-rows colr piece-yx-pos)
      (board-create-new-rows-if-needed colr piece-yx-pos)))
-  ;; TODO wipe out rows that are now complete
-  (game-state #f get-new-piece new-board (freeze (paint-board new-board))))
+  (game-state
+   (rows-to-wipe-info new-board)
+   get-new-piece new-board
+   (freeze (paint-board new-board))))
 
 (define (board-update-rows board-rows colr piece-yx-pos)
   (reverse
@@ -146,6 +145,15 @@
         board-width-tiles
         (hash-ref piece-yx-pos idx) colr)
        r)))
+
+(define (rows-to-wipe-info board)
+  (define rows-to-wipe
+    (for/list ([i (in-naturals)]
+               [row (reverse board)]
+               #:when (andmap identity row)) i))
+  (if (null? rows-to-wipe)
+      'normal
+      (list 'wiping-rows rows-to-wipe 0)))
 
 (define (modify-in-range value offset min max)
   (let ([new-value (+ offset value)])
@@ -198,3 +206,21 @@
 (define/match* (position-occupied? board-rows offset-x offset-y (cons y xs))
   (define cmp (if (> offset-x 0) max min))
   (board-get-item board-rows (+ offset-x (apply cmp xs)) (+ offset-y y)))
+
+(define (game-state-update-picture game-state)
+   (game-state-cur-board-pic-set game-state
+    (freeze (paint-board (game-state-board-rows game-state)))))
+
+(define (wipe-rows-step game-state rows step)
+  ;; TODO implement animation
+  (~>
+   game-state
+   (game-state-board-rows-set
+    (reverse
+     (for/list
+         ([item (reverse (game-state-board-rows game-state))]
+          [i (in-naturals)]
+          #:when (not (member i rows)))
+       item)))
+   (game-state-update-picture)
+   (game-state-mode-set 'normal)))
