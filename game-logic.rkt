@@ -4,6 +4,7 @@
 (require match-plus threading curly-fn)
 (require alexis/util/struct)
 (require "drawing.rkt")
+(require racket/contract)
 
 (provide
  game-state
@@ -81,7 +82,10 @@
 
 ;; CAREFUL if you give falling-speed bigger
 ;; than tile-size you can overshoot and let it through!
-(define (lower-piece game-state [y-value falling-speed])
+(define/contract (lower-piece game-state [y-value falling-speed])
+  (->* (game-state?)
+       ((integer-in 0 tile-size))
+       game-state?)
   (define new-state (game-state-update-piece
                      game-state #{cur-piece-state-y-pixels-update % #{+ y-value}}))
   (if (piece-touches-bottom game-state)
