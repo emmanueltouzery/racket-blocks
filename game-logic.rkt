@@ -278,8 +278,29 @@
    #{map (match-lambda [(list x y) (list y (- width x))])}
    piece-state))
 
-(define/match* (piece-state-transform-piece f (cur-piece-state piece pic x-tiles y-pixels))
-  (define rotated-piece (piece-positions-update piece f))
+;; make sure the x starts at 0 and the y too.
+;; otherwise for the x, we can't move the piece
+;; fully to the left of the screen anymore!
+;; TODO will crash if list is empty?
+(define/match* (piece-positions-reset-to-root (piece col positions))
+  (define-values (min-x min-y)
+    (for/fold
+        ([cur-min-x (first (first positions))]
+         [cur-min-y (second (first positions))])
+        ([pos positions])
+      (values
+       (min (first pos) cur-min-x)
+       (min (second pos) cur-min-y))))
+  (define new-pos
+    (for/list ([pos positions])
+      (list (- (first pos) min-x) (- (second pos) min-y))))
+  (piece col new-pos))
+
+(define/match* (piece-state-transform-piece
+                f (cur-piece-state piece pic x-tiles y-pixels))
+  (define rotated-piece
+    (piece-positions-reset-to-root
+     (piece-positions-update piece f)))
   (cur-piece-state
    rotated-piece
    (freeze (draw-piece rotated-piece))
