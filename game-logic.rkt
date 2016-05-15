@@ -79,9 +79,11 @@
          (and (<= (add1 x) (length row))
               (list-ref row x)))))
 
-(define (lower-piece game-state)
+;; CAREFUL if you give falling-speed bigger
+;; than tile-size you can overshoot and let it through!
+(define (lower-piece game-state [y-value falling-speed])
   (define new-state (game-state-update-piece
-                     game-state #{cur-piece-state-y-pixels-update % #{+ falling-speed}}))
+                     game-state #{cur-piece-state-y-pixels-update % #{+ y-value}}))
   (if (piece-touches-bottom game-state)
       (reached-bottom game-state)
       new-state))

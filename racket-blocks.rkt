@@ -14,7 +14,8 @@
     [("up") (game-state-update-piece
                game-state
                piece-state-rotate-left)]
-    [(" ")
+    [(" ") (lower-piece game-state tile-size)]
+    [("p" "P")
      (game-state-mode-update
       game-state #{case %
                     ['paused 'normal]
