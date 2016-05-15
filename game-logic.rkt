@@ -92,10 +92,12 @@
    2))
 
 (define get-new-piece
-  (cur-piece-state
-   (first pieces)
-   (freeze (draw-piece (first pieces)))
-   (center-x-offset-tiles (first pieces)) 0))
+  (λ()
+    (let
+        ([piece (list-ref pieces (random (length pieces)))])
+      (cur-piece-state
+       piece (freeze (draw-piece piece))
+       (center-x-offset-tiles piece) 0))))
 
 ;; returns a hash with absolute grid positions
 ;; for the piece. key = y, value = list of x for that y.
@@ -166,7 +168,7 @@
         (list 'wiping-rows wiped-rows 0)))
   (game-state
    game-mode
-   get-new-piece new-board
+   (get-new-piece) new-board
    (freeze (paint-board new-board))))
 
 (define (get-new-board-wiped-rows board)

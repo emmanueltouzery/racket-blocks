@@ -24,7 +24,7 @@
 (define start-game-state
   (game-state
    'normal
-   get-new-piece
+   (get-new-piece)
    '() (freeze (draw-board))))
 
 (big-bang
