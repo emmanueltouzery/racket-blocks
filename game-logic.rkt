@@ -28,6 +28,7 @@
 
 (define falling-speed 1)
 (define move-x-tolerance 5)
+(define row-wipe-step 10)
 
 ;; TODO animation when we're in pause.
 (define/match* (draw-game (game-state mode cur-piece-state board-rows cur-board-draw))
@@ -249,7 +250,8 @@
 (define (wipe-rows-step game-state index+row-list step)
   (if (< step (* board-width-tiles tile-size))
       ;; increase the step
-      (game-state-mode-update game-state #{list-update % 2 #{+ 10}})
+      (game-state-mode-update
+       game-state #{list-update % 2 #{+ row-wipe-step}})
       ;; we're done: complete the wipe.
       (complete-the-wipe game-state index+row-list)))
 
