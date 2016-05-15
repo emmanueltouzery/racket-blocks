@@ -5,10 +5,10 @@
 (require curly-fn)
 
 (define (handle-key game-state k)
-  (cond
-    [(key=? k "left") (piece-move-x -1 game-state)]
-    [(key=? k "right") (piece-move-x 1 game-state)]
-    [(key=? k " ")
+  (case k
+    [("left") (piece-move-x -1 game-state)]
+    [("right") (piece-move-x 1 game-state)]
+    [(" ")
      (game-state-mode-update
       game-state #{case %
                     ['paused 'normal]
