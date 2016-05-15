@@ -10,6 +10,7 @@
  game-state-mode
  game-state-mode-update
  game-state-update-piece
+ piece-state-rotate-left
  piece-state-rotate-right
  get-new-piece
  cur-piece-state
@@ -265,6 +266,14 @@
      (cur-piece-state-piece piece-state)))
   (piece-state-transform-piece
    #{map (match-lambda [(list x y) (list (- height y) x)])}
+   piece-state))
+
+(define (piece-state-rotate-left piece-state)
+  (define width
+    (piece-width-tiles
+     (cur-piece-state-piece piece-state)))
+  (piece-state-transform-piece
+   #{map (match-lambda [(list x y) (list y (- width x))])}
    piece-state))
 
 (define/match* (piece-state-transform-piece f (cur-piece-state piece pic x-tiles y-pixels))

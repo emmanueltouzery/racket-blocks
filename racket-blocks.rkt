@@ -11,6 +11,9 @@
     [("down") (game-state-update-piece
                game-state
                piece-state-rotate-right)]
+    [("up") (game-state-update-piece
+               game-state
+               piece-state-rotate-left)]
     [(" ")
      (game-state-mode-update
       game-state #{case %
