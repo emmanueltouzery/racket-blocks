@@ -9,6 +9,8 @@
  game-state
  game-state-mode
  game-state-mode-update
+ game-state-update-piece
+ piece-state-rotate-right
  get-new-piece
  cur-piece-state
  piece-move-x
@@ -256,3 +258,18 @@
    ;; recalculate the picture, reset to normal.
    (game-state-update-picture)
    (game-state-mode-set 'normal)))
+
+(define (piece-state-rotate-right piece-state)
+  (define height
+    (piece-height-tiles
+     (cur-piece-state-piece piece-state)))
+  (piece-state-transform-piece
+   #{map (match-lambda [(list x y) (list (- height y) x)])}
+   piece-state))
+
+(define/match* (piece-state-transform-piece f (cur-piece-state piece pic x-tiles y-pixels))
+  (define rotated-piece (piece-positions-update piece f))
+  (cur-piece-state
+   rotated-piece
+   (freeze (draw-piece rotated-piece))
+   x-tiles y-pixels))

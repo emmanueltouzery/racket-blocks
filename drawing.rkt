@@ -11,13 +11,16 @@
  ;; pieces
  piece
  piece-color
+ piece-positions-update
  pieces
  draw-piece
- piece-width-tiles)
+ piece-width-tiles
+ piece-height-tiles)
 
 (require 2htdp/image lang/posn picturing-programs)
 (require match-plus curly-fn threading)
 (require (for-syntax syntax/parse))
+(require alexis/util/struct)
 
 (define tile-size 24)
 (define board-width-tiles 10)
@@ -81,6 +84,7 @@
     "solid" bright-shade)))
 
 (struct piece (color positions) #:transparent)
+(define-struct-updaters piece)
 
 (define pieces
   (list (piece "red"    '((0 0) (1 0) (2 0)

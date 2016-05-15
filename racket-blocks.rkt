@@ -8,6 +8,9 @@
   (case k
     [("left") (piece-move-x -1 game-state)]
     [("right") (piece-move-x 1 game-state)]
+    [("down") (game-state-update-piece
+               game-state
+               piece-state-rotate-right)]
     [(" ")
      (game-state-mode-update
       game-state #{case %
