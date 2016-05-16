@@ -14,7 +14,10 @@
     [("up") (game-state-update-piece
                game-state
                piece-state-rotate-left)]
-    [(" ") (lower-piece game-state tile-size)]
+    [(" ") (case (game-state-mode game-state)
+             ['normal (lower-piece game-state tile-size)]
+             ['game-over start-game-state]
+             [else game-state])]
     [("p" "P")
      (game-state-mode-update
       game-state #{case %
@@ -32,6 +35,7 @@
  start-game-state
  (to-draw draw-game)
  (on-tick #{match (game-state-mode %)
+             ['game-over %]
              ['paused %]
              ['normal (lower-piece %)]
              [(list 'wiping-rows rows step) (wipe-rows-step % rows step)]} 0.015)

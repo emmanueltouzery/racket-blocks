@@ -22,7 +22,8 @@
 
 (struct cur-piece-state (piece pic x-tiles y-pixels) #:transparent)
 (define-struct-updaters cur-piece-state)
-;; game-mode can be 'normal, 'paused, 'wiping-rows
+;; game-mode can be 'normal, 'paused, 'wiping-rows, 'game-over
+;; TODO use racket union types, enums or something to make that clearer.
 (struct game-state (mode cur-piece-state board-rows cur-board-pic) #:transparent)
 (define-struct-updaters game-state)
 
@@ -30,8 +31,15 @@
 (define move-x-tolerance 5)
 (define row-wipe-step 10)
 
-;; TODO animation when we're in pause.
-(define/match* (draw-game (game-state mode cur-piece-state board-rows cur-board-draw))
+(define (draw-game game-state)
+  (define scene
+    (draw-board-and-tiles game-state))
+  (case (game-state-mode game-state)
+    ['paused (draw-text-overlay "Paused" scene)]
+    ['game-over (draw-text-overlay "Game over!" scene)]
+    [else scene]))
+
+(define/match* (draw-board-and-tiles (game-state mode cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
     (~> cur-piece-state cur-piece-state-piece piece-width-tiles))
   (~>
@@ -41,6 +49,13 @@
     (* (cur-piece-state-x-tiles cur-piece-state) tile-size)
     (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)
    (draw-mode-specific mode)))
+
+(define (draw-text-overlay txt scene)
+  (place-image
+   (text/font txt 24 "red" #f 'default 'normal 'bold #f)
+   (/ (* board-width-tiles tile-size) 2)
+   (/ (* board-height-tiles tile-size) 2)
+   scene))
 
 (define (draw-mode-specific image mode)
   (match mode
@@ -134,16 +149,17 @@
 
 (define/match* (reached-bottom
                 (game-state _ piece-state board-rows _))
-  (define colr (piece-color
-                (cur-piece-state-piece piece-state)))
-  (define piece-yx-pos
-    (get-piece-yx-positions piece-state))
-  (define new-board
-    (~>
-     board-rows
-     (board-update-rows colr piece-yx-pos)
-     (board-create-new-rows-if-needed colr piece-yx-pos)))
-  (reached-bottom-get-new-game-state new-board))
+  (match piece-state
+    [(cur-piece-state piece _ _ y-pixels)
+     (define colr (piece-color piece))
+     (define piece-yx-pos
+       (get-piece-yx-positions piece-state))
+     (define new-board
+       (~>
+        board-rows
+        (board-update-rows colr piece-yx-pos)
+        (board-create-new-rows-if-needed colr piece-yx-pos)))
+     (reached-bottom-get-new-game-state new-board y-pixels)]))
 
 (define (board-update-rows board-rows colr piece-yx-pos)
   (reverse
@@ -164,15 +180,17 @@
       (hash-ref piece-yx-pos idx) colr)
      r)))
 
-(define (reached-bottom-get-new-game-state board)
+(define (reached-bottom-get-new-game-state board y-pixels)
   (define-values (new-board wiped-rows)
     (get-new-board-wiped-rows board))
   (define game-mode
-    (if (null? wiped-rows)
-        ;; no wiped rows, continue normally
-        'normal
-        ;; wiped rows, animate their removal
-        (list 'wiping-rows wiped-rows 0)))
+    (cond
+      ;; we reached the top
+      [(<= y-pixels 0) 'game-over]
+      ;; no wiped rows, continue normally
+      [(null? wiped-rows) 'normal]
+      ;; wiped rows, animate their removal
+      [(list 'wiping-rows wiped-rows 0)]))
   (game-state
    game-mode
    (get-new-piece) new-board
@@ -205,21 +223,18 @@
     [else #f]))
 
 (define (piece-move-x offset g-state)
-  (printf "piece-move-x!!~n")
   (match-let
       ([(game-state _ piece-state board-rows _) g-state])
     (define piece-yx
       (hash->list (get-piece-yx-positions piece-state)))
     (define occupied-cur
       (occupied-pieces? board-rows offset 0 piece-yx))
-    (printf "exactly on? ~a  -- occupied-cur ~a  ~n" (exactly-on-y? piece-state) occupied-cur)
     (define occupied
       (case (exactly-on-y? piece-state)
         ['cur occupied-cur]
         ['next (occupied-pieces? board-rows offset -1 piece-yx)]
         [else (or occupied-cur
                   (occupied-pieces? board-rows offset -1 piece-yx))]))
-    (printf "occupied is ~a ~n" occupied)
     (if occupied
         g-state
         (do-move-x offset g-state))))
