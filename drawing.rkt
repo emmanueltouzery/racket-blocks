@@ -4,7 +4,7 @@
  tile-size
  ;; board
  paint-board
- draw-board
+ board-bg
  board-width-tiles
  board-height-tiles
  paint-row
@@ -147,7 +147,9 @@
        (place-image/align (block-tile cell-value) (+ x x-offset) y "left" "top" cur-board)]
       [else cur-board])))
 
+(define board-bg (freeze (draw-board)))
+
 ;; paint a board with all the tiles as described by 'board-st'
 (define (paint-board board-st)
-  (for/fold ([board (draw-board)]) ([row board-st] [row-idx (in-naturals)])
+  (for/fold ([board board-bg]) ([row board-st] [row-idx (in-naturals)])
     (paint-row 0 board row (- (length board-st) row-idx))))

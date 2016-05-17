@@ -30,6 +30,7 @@
 (define falling-speed 1)
 (define move-x-tolerance 5)
 (define row-wipe-step 10)
+(define pixels-top-game-over 5)
 
 (define (draw-game game-state)
   (define scene
@@ -104,8 +105,8 @@
        game-state?)
   (define new-state (game-state-update-piece
                      game-state #{cur-piece-state-y-pixels-update % #{+ y-value}}))
-  (if (piece-touches-bottom game-state)
-      (reached-bottom game-state)
+  (if (piece-touches-bottom new-state)
+      (reached-bottom new-state)
       new-state))
 
 (define (center-x-offset-tiles piece)
@@ -186,7 +187,7 @@
   (define game-mode
     (cond
       ;; we reached the top
-      [(<= y-pixels 0) 'game-over]
+      [(<= y-pixels pixels-top-game-over) 'game-over]
       ;; no wiped rows, continue normally
       [(null? wiped-rows) 'normal]
       ;; wiped rows, animate their removal

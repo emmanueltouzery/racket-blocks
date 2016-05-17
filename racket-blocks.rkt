@@ -29,7 +29,7 @@
   (game-state
    'normal
    (get-new-piece)
-   '() (freeze (draw-board))))
+   '() board-bg))
 
 (big-bang
  start-game-state
@@ -38,5 +38,6 @@
              ['game-over %]
              ['paused %]
              ['normal (lower-piece %)]
-             [(list 'wiping-rows rows step) (wipe-rows-step % rows step)]} 0.015)
+             [(list 'wiping-rows rows step)
+              (wipe-rows-step % rows step)]} 0.015)
  (on-key handle-key))
