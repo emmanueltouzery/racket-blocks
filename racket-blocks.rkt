@@ -38,6 +38,6 @@
              ['game-over %]
              ['paused %]
              ['normal (lower-piece %)]
-             [(list 'wiping-rows rows step)
-              (wipe-rows-step % rows step)]} 0.015)
+             [(list 'wiping-rows idx-pics step)
+              (wipe-rows-step % (map first idx-pics) step)]} 0.015)
  (on-key handle-key))

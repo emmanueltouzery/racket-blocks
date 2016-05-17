@@ -138,13 +138,13 @@
                 (λ(board y) (add-line board 0 y board-width y board-grid-color)))))
 
 ;; paint the tiles listed in 'row' at y offset based on 'row-idx'
-(define (paint-row x-offset board row row-idx)
+(define (paint-row board row row-idx)
   (define y (- (image-height board) (* tile-size row-idx)))
   (for/fold ([cur-board board]) ([cell-value row] [col-idx (in-naturals)])
     (cond
       [(image-color? cell-value)
        (define x (* tile-size col-idx))
-       (place-image/align (block-tile cell-value) (+ x x-offset) y "left" "top" cur-board)]
+       (place-image/align (block-tile cell-value) x y "left" "top" cur-board)]
       [else cur-board])))
 
 (define board-bg (freeze (draw-board)))
@@ -152,4 +152,4 @@
 ;; paint a board with all the tiles as described by 'board-st'
 (define (paint-board board-st)
   (for/fold ([board board-bg]) ([row board-st] [row-idx (in-naturals)])
-    (paint-row 0 board row (- (length board-st) row-idx))))
+    (paint-row board row (- (length board-st) row-idx))))

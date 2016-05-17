@@ -29,7 +29,7 @@
 
 (define falling-speed 1)
 (define move-x-tolerance 5)
-(define row-wipe-step 10)
+(define row-wipe-step 5)
 (define pixels-top-game-over 5)
 
 (define (draw-game game-state)
@@ -60,9 +60,14 @@
 
 (define (draw-mode-specific image mode)
   (match mode
-    [(list 'wiping-rows rows step)
-     (for/fold ([board image]) ([row rows])
-       (paint-row (- step) board (second row) (add1 (first row))))]
+    [(list 'wiping-rows idx-pics step)
+     (for/fold ([board image]) ([idx-pic idx-pics])
+       (match idx-pic
+         [(list idx pic)
+          (place-image/align
+           pic (- step)
+           (* tile-size (- board-height-tiles idx 1))
+           "left" "top" board)]))]
     [else image]))
 
 (define (game-state-update-piece game-state piece-updater)
@@ -191,11 +196,19 @@
       ;; no wiped rows, continue normally
       [(null? wiped-rows) 'normal]
       ;; wiped rows, animate their removal
-      [(list 'wiping-rows wiped-rows 0)]))
+      [(list 'wiping-rows
+             (map #{list-update % 1 get-row-image} wiped-rows)
+             0)]))
   (game-state
    game-mode
    (get-new-piece) new-board
    (freeze (paint-board new-board))))
+
+(define (get-row-image row)
+  (define img (rectangle
+               (* board-width-tiles tile-size)
+               tile-size 'solid "transparent"))
+  (freeze (paint-row img row 1)))
 
 (define (get-new-board-wiped-rows board)
   (for/fold
@@ -263,16 +276,15 @@
    game-state
    (freeze (paint-board (game-state-board-rows game-state)))))
 
-(define (wipe-rows-step game-state index+row-list step)
+(define (wipe-rows-step game-state row-indexes step)
   (if (< step (* board-width-tiles tile-size))
       ;; increase the step
       (game-state-mode-update
        game-state #{list-update % 2 #{+ row-wipe-step}})
       ;; we're done: complete the wipe.
-      (complete-the-wipe game-state index+row-list)))
+      (complete-the-wipe game-state row-indexes)))
 
-(define (complete-the-wipe game-state index+row-list)
-  (define row-indexes (map first index+row-list))
+(define (complete-the-wipe game-state row-indexes)
   (~>
    ;; remove the rows that were wiped
    (game-state-board-rows-set game-state
