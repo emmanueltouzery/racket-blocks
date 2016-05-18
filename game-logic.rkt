@@ -9,6 +9,7 @@
 (provide
  game-state
  game-state-mode
+ game-state-mode-set
  game-state-mode-update
  game-state-update-piece
  piece-state-rotate-left
@@ -17,7 +18,8 @@
  cur-piece-state
  piece-move-x
  lower-piece
- draw-game
+ draw-board-and-tiles
+ draw-text-overlay
  wipe-rows-step)
 
 (struct cur-piece-state (piece pic x-tiles y-pixels) #:transparent)
@@ -32,14 +34,6 @@
 (define row-wipe-step 5)
 (define pixels-top-game-over 5)
 
-(define (draw-game game-state)
-  (define scene
-    (draw-board-and-tiles game-state))
-  (case (game-state-mode game-state)
-    ['paused (draw-text-overlay "Paused" scene)]
-    ['game-over (draw-text-overlay "Game over!" scene)]
-    [else scene]))
-
 (define/match* (draw-board-and-tiles (game-state mode cur-piece-state board-rows cur-board-draw))
   (define cur-piece-width-tiles
     (~> cur-piece-state cur-piece-state-piece piece-width-tiles))
@@ -48,8 +42,7 @@
    (place-image/align
     (cur-piece-state-pic cur-piece-state)
     (* (cur-piece-state-x-tiles cur-piece-state) tile-size)
-    (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)
-   (draw-mode-specific mode)))
+    (cur-piece-state-y-pixels cur-piece-state) "left" "top" _)))
 
 (define (draw-text-overlay txt scene)
   (place-image
@@ -57,18 +50,6 @@
    (/ (* board-width-tiles tile-size) 2)
    (/ (* board-height-tiles tile-size) 2)
    scene))
-
-(define (draw-mode-specific image mode)
-  (match mode
-    [(list 'wiping-rows idx-pics step)
-     (for/fold ([board image]) ([idx-pic idx-pics])
-       (match idx-pic
-         [(list idx pic)
-          (place-image/align
-           pic (- step)
-           (* tile-size (- board-height-tiles idx 1))
-           "left" "top" board)]))]
-    [else image]))
 
 (define (game-state-update-piece game-state piece-updater)
   (game-state-cur-piece-state-set
