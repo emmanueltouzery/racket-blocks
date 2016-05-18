@@ -337,7 +337,14 @@
   (define rotated-piece
     (piece-positions-reset-to-root
      (piece-positions-update piece f)))
+  ;; due to rotation, the piece may now be
+  ;; partially off the screen; reset the X
+  ;; if needed.
+  (define piece-width
+    (piece-width-tiles rotated-piece))
+  (define new-x
+    (min x-tiles (- board-width-tiles piece-width)))
   (cur-piece-state
    rotated-piece
    (freeze (draw-piece rotated-piece))
-   x-tiles y-pixels))
+   new-x y-pixels))
